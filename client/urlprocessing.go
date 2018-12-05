@@ -22,8 +22,7 @@ func FindURLs(body string) []string {
 	return returnedLinks
 }
 
-
-func ParseUrl(urlPage string, ctxUrl string) string{
+func ParseUrl(urlPage string, ctxUrl string) string {
 	var fullLink string
 	u, err := url.Parse(ctxUrl)
 	if err != nil {
@@ -33,6 +32,6 @@ func ParseUrl(urlPage string, ctxUrl string) string{
 	if err != nil {
 		log.Fatal(err)
 	}
-	fullLink=(base.ResolveReference(u)).String()
+	fullLink = (base.ResolveReference(u)).String()
 	return fullLink
 }

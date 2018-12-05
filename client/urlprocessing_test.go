@@ -1,18 +1,16 @@
-package client_test
+package urlprocessing_test
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"github.com/bruteforce1414/crawler/client"
 	"github.com/bruteforce1414/simple-web-client-with-test/client"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
+
 )
 
 func TestHttpClient_Get(t *testing.T) {
@@ -34,32 +32,18 @@ func TestHttpClient_Get(t *testing.T) {
 		w.Write([]byte(s))
 	})
 
-	clientTest := client.NewHttpClient(server.URL)
-	resp, err := clientTest.Get("/teachers/283208/")
+	clientTest:=client.NewHttpClient(server.URL)
+		resp, err := clientTest.Get("/teachers/283208/")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Ответ сервера: ", string(resp))
-	for i, link := range FindURLs(string(resp)) {
+	for i, link := range urlprocessing.FindURLs(string(resp)) {
 		fmt.Println("Ссылка №",i+1,": ", link)
 	}
-	a.Equal(tURLS, FindURLs(string(resp)))
+	a.Equal(tURLS, urlprocessing.FindURLs(string(resp)))
 }
 
-func FindURLs(body string) []string {
-	var returnedLinks []string
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-
-	doc.Find("a").Each(func(i int, s *goquery.Selection) {
-		link, _ := s.Attr("href")
-		returnedLinks = append(returnedLinks, link)
-
-	})
-	return returnedLinks
-}
 
 
 
@@ -94,26 +78,13 @@ func TestHttpClient_Get2(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println("Ответ сервера: ", string(resp))
-	for i, link := range FindURLs(string(resp)) {
+	for i, link := range urlprocessing.FindURLs(string(resp)) {
 		fmt.Println("Ссылка №",i+1,": ", link)
-		link=ParseUrl(server.URL+reqGetText,link)
+		link=urlprocessing.ParseUrl(server.URL+reqGetText,link)
 		fmt.Println("Полный путь по ссылке №",i+1,": ", link)
 	}
-	a.Equal(tURLS, FindURLs(string(resp)))
+	a.Equal(tURLS, urlprocessing.FindURLs(string(resp)))
 	time.Sleep(100000)
 
 }
 
-func ParseUrl(urlPage string, ctxUrl string) string{
-var fullLink string
-	u, err := url.Parse(ctxUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-	base, err := url.Parse(urlPage)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fullLink=(base.ResolveReference(u)).String()
-return fullLink
-}

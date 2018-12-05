@@ -3,7 +3,7 @@ package urlprocessing_test
 import (
 	"fmt"
 	"github.com/bruteforce1414/crawler/client"
-	"github.com/bruteforce1414/simple-web-client-with-test/client"
+	"io/ioutil"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -31,20 +31,21 @@ func TestHttpClient_Get(t *testing.T) {
 		s = fmt.Sprintf("<html><body>%s</body></html>", links)
 		w.Write([]byte(s))
 	})
-
-	clientTest:=client.NewHttpClient(server.URL)
-		resp, err := clientTest.Get("/teachers/283208/")
+		reqGetText:=server.URL+"/teachers/283208/"
+          clientTest:=server.Client()
+		resp, err := clientTest.Get(reqGetText)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Ответ сервера: ", string(resp))
-	for i, link := range urlprocessing.FindURLs(string(resp)) {
-		fmt.Println("Ссылка №",i+1,": ", link)
+
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
+	t.Log("Ответ сервера: ", bodyString)
+	for i, link := range urlprocessing.FindURLs(bodyString) {
+		t.Log("Ссылка №",i+1,": ", link)
 	}
-	a.Equal(tURLS, urlprocessing.FindURLs(string(resp)))
+	a.Equal(tURLS, urlprocessing.FindURLs(bodyString))
 }
-
-
 
 
 func TestHttpClient_Get2(t *testing.T) {
@@ -71,19 +72,25 @@ func TestHttpClient_Get2(t *testing.T) {
 			w.Write([]byte("Hello!!!"))
 	})
 
-	reqGetText:="/teachers/283208/"
-	clientTest := client.NewHttpClient(server.URL)
+	reqGetText:=server.URL+"/teachers/283208/"
+
+	clientTest:=server.Client()
+
+
 	resp, err := clientTest.Get(reqGetText)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Ответ сервера: ", string(resp))
-	for i, link := range urlprocessing.FindURLs(string(resp)) {
-		fmt.Println("Ссылка №",i+1,": ", link)
-		link=urlprocessing.ParseUrl(server.URL+reqGetText,link)
-		fmt.Println("Полный путь по ссылке №",i+1,": ", link)
+
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	bodyString := string(bodyBytes)
+	t.Log("Ответ сервера: ", bodyString)
+	for i, link := range urlprocessing.FindURLs(bodyString) {
+		t.Log("Ссылка №",i+1,": ", link)
+		link=urlprocessing.ParseUrl(reqGetText,link)
+		t.Log("Полный путь по ссылке №",i+1,": ", link)
 	}
-	a.Equal(tURLS, urlprocessing.FindURLs(string(resp)))
+	a.Equal(tURLS, urlprocessing.FindURLs(bodyString))
 	time.Sleep(100000)
 
 }

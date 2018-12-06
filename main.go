@@ -66,21 +66,26 @@ func worker() {
 			log.Printf("Received a message: %s", d.Body)
 			resp, err := http.Get(string(d.Body))
 			if err != nil {
+
 				panic(err)
 			}
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			bodyString := string(bodyBytes)
-			//	var linksHttp []string
+
 			linksAll := urlprocessing.FindURLs(bodyString)
 			for i, link := range linksAll {
 
 				fmt.Println("Cсылка №", i+1, ": ", link)
 				link = urlprocessing.ParseUrl(string(d.Body), link)
 				if link != "" {
+					// здесь будет добавление в очередь
 					fmt.Println("Полный путь по ссылке №", i+1, ": ", link)
 				}
 				if link == "" {
 					fmt.Println("Ссылка №", i+1, "не относится к формату text/html", link)
+				}
+				if link == "error" {
+					fmt.Println("Ссылка на ресурс не работает")
 				}
 			}
 			log.Printf("Done")
@@ -114,7 +119,7 @@ func Publicher() {
 	)
 	failOnError(err, "Failed to declare a queue")
 
-	body := "http://www.old.fa.ru/fil/ufa/Pages/cont.aspx"
+	body := "http://shkola114.ru/index.php?option=com_content&view=article&id=431&Itemid=195"
 	err = ch.Publish(
 		"",     // exchange
 		q.Name, // routing key

@@ -30,10 +30,12 @@ func ParseUrl(urlPage string, ctxUrl string) string {
 	var fullLink string
 	u, err := url.Parse(ctxUrl)
 	if err != nil {
+		fmt.Println("Случился фатал", ctxUrl)
 		log.Fatal(err)
 	}
 	base, err := url.Parse(urlPage)
 	if err != nil {
+		fmt.Println("Случился фатал", urlPage)
 		log.Fatal(err)
 	}
 	fullLink = (base.ResolveReference(u)).String()
@@ -55,14 +57,14 @@ func ParseUrl(urlPage string, ctxUrl string) string {
 
 	resp, err := http.Head(fullLink)
 	if err != nil {
-		log.Fatal(err)
+		//	fmt.Println("Доступ к странице отсутствует, возвращена ошибка:", err)
+		return "error"
 	}
 	contentType := resp.Header.Get("Content-type")
 	if strings.Contains(contentType, "text/html") {
 		fmt.Println("contentType", contentType)
 		return fullLink
 	}
-	fmt.Println("Расширение неподходящего файла =", ext)
 	return ""
 
 }

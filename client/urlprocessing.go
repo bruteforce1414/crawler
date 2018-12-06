@@ -1,9 +1,12 @@
 package urlprocessing
 
 import (
+	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"log"
+	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 )
 
@@ -18,6 +21,7 @@ func FindURLs(body string) []string {
 		link, _ := s.Attr("href")
 		returnedLinks = append(returnedLinks, link)
 
+		fmt.Println("Нашлась ссылка:№", i+1, link)
 	})
 	return returnedLinks
 }
@@ -33,5 +37,32 @@ func ParseUrl(urlPage string, ctxUrl string) string {
 		log.Fatal(err)
 	}
 	fullLink = (base.ResolveReference(u)).String()
-	return fullLink
+
+	// Checking for http in first fourth characters in url
+	if strings.Contains(fullLink[0:4], "http") != true {
+		fmt.Println("fullLink[0:4]", fullLink[0:4])
+		return "Не http или https"
+	}
+
+	ext := filepath.Ext(fullLink)
+	fmt.Println("Расширение файла:", ext)
+	if len(ext) == 0 {
+		return fullLink
+	}
+	if (ext == "htm") || (ext == "html") {
+		return fullLink
+	}
+
+	resp, err := http.Head(fullLink)
+	if err != nil {
+		log.Fatal(err)
+	}
+	contentType := resp.Header.Get("Content-type")
+	if strings.Contains(contentType, "text/html") {
+		fmt.Println("contentType", contentType)
+		return fullLink
+	}
+	fmt.Println("Расширение неподходящего файла =", ext)
+	return ""
+
 }

@@ -3,14 +3,13 @@ package urlprocessing_test
 import (
 	"fmt"
 	"github.com/bruteforce1414/crawler/client"
-	"io/ioutil"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
-
 )
 
 func TestHttpClient_Get(t *testing.T) {
@@ -31,9 +30,9 @@ func TestHttpClient_Get(t *testing.T) {
 		s = fmt.Sprintf("<html><body>%s</body></html>", links)
 		w.Write([]byte(s))
 	})
-		reqGetText:=server.URL+"/teachers/283208/"
-          clientTest:=server.Client()
-		resp, err := clientTest.Get(reqGetText)
+	reqGetText := server.URL + "/teachers/283208/"
+	clientTest := server.Client()
+	resp, err := clientTest.Get(reqGetText)
 	if err != nil {
 		panic(err)
 	}
@@ -42,11 +41,10 @@ func TestHttpClient_Get(t *testing.T) {
 	bodyString := string(bodyBytes)
 	t.Log("Ответ сервера: ", bodyString)
 	for i, link := range urlprocessing.FindURLs(bodyString) {
-		t.Log("Ссылка №",i+1,": ", link)
+		t.Log("Ссылка №", i+1, ": ", link)
 	}
 	a.Equal(tURLS, urlprocessing.FindURLs(bodyString))
 }
-
 
 func TestHttpClient_Get2(t *testing.T) {
 	a := assert.New(t)
@@ -55,7 +53,7 @@ func TestHttpClient_Get2(t *testing.T) {
 	defer server.Close()
 
 	tURLS := []string{
-		server.URL ,"/teachers/283208/","info",
+		server.URL, "/teachers/283208/", "info",
 	}
 	mux.HandleFunc("/teachers/283208/", func(w http.ResponseWriter, r *http.Request) {
 		var links string
@@ -69,13 +67,12 @@ func TestHttpClient_Get2(t *testing.T) {
 	})
 
 	mux.HandleFunc("/teachers/283208/info", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Hello!!!"))
+		w.Write([]byte("Hello!!!"))
 	})
 
-	reqGetText:=server.URL+"/teachers/283208/"
+	reqGetText := server.URL + "/teachers/283208/"
 
-	clientTest:=server.Client()
-
+	clientTest := server.Client()
 
 	resp, err := clientTest.Get(reqGetText)
 	if err != nil {
@@ -86,12 +83,11 @@ func TestHttpClient_Get2(t *testing.T) {
 	bodyString := string(bodyBytes)
 	t.Log("Ответ сервера: ", bodyString)
 	for i, link := range urlprocessing.FindURLs(bodyString) {
-		t.Log("Ссылка №",i+1,": ", link)
-		link=urlprocessing.ParseUrl(reqGetText,link)
-		t.Log("Полный путь по ссылке №",i+1,": ", link)
+		t.Log("Ссылка №", i+1, ": ", link)
+		link = urlprocessing.ParseUrl(reqGetText, link)
+		t.Log("Полный путь по ссылке №", i+1, ": ", link)
 	}
 	a.Equal(tURLS, urlprocessing.FindURLs(bodyString))
 	time.Sleep(100000)
 
 }
-

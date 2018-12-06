@@ -3,7 +3,6 @@ package urlprocessing
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -30,13 +29,11 @@ func ParseUrl(urlPage string, ctxUrl string) string {
 	var fullLink string
 	u, err := url.Parse(ctxUrl)
 	if err != nil {
-		fmt.Println("Случился фатал", ctxUrl)
-		log.Fatal(err)
+		return "error"
 	}
 	base, err := url.Parse(urlPage)
 	if err != nil {
-		fmt.Println("Случился фатал", urlPage)
-		log.Fatal(err)
+		return "error"
 	}
 	fullLink = (base.ResolveReference(u)).String()
 

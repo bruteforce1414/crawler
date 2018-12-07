@@ -9,59 +9,56 @@ import (
 	"strings"
 )
 
-func FindURLs(body string) []string {
+func FindURLs(body string) ([]string, error) {
+
 	var returnedLinks []string
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	doc.Find("a").Each(func(i int, s *goquery.Selection) {
 		link, _ := s.Attr("href")
 		returnedLinks = append(returnedLinks, link)
 
-		fmt.Println("Нашлась ссылка:№", i+1, link)
 	})
-	return returnedLinks
+	return returnedLinks, err
 }
 
-func ParseUrl(urlPage string, ctxUrl string) string {
-	var fullLink string
+func ParseUrl(urlPage string, ctxUrl string) (string, error) {
+
 	u, err := url.Parse(ctxUrl)
 	if err != nil {
-		return "error"
+		return "", err
 	}
+
 	base, err := url.Parse(urlPage)
 	if err != nil {
-		return "error"
+		return "", err
 	}
-	fullLink = (base.ResolveReference(u)).String()
+	fullLink := (base.ResolveReference(u)).String()
 
 	// Checking for http in first fourth characters in url
 	if strings.Contains(fullLink[0:4], "http") != true {
-		fmt.Println("fullLink[0:4]", fullLink[0:4])
-		return "Не http или https"
+		return "", fmt.Errorf("Ссылка не поддерживает протокол http или https")
 	}
 
-	ext := filepath.Ext(fullLink)
-	fmt.Println("Расширение файла:", ext)
-	if len(ext) == 0 {
-		return fullLink
+	extension := filepath.Ext(fullLink)
+	if len(extension) == 0 {
+		return fullLink, err
 	}
-	if (ext == "htm") || (ext == "html") {
-		return fullLink
+	if (extension == "htm") || (extension == "html") {
+		return fullLink, err
 	}
 
 	resp, err := http.Head(fullLink)
 	if err != nil {
-		//	fmt.Println("Доступ к странице отсутствует, возвращена ошибка:", err)
-		return "error"
+		return "", fmt.Errorf("Страница не доступна")
 	}
 	contentType := resp.Header.Get("Content-type")
 	if strings.Contains(contentType, "text/html") {
-		fmt.Println("contentType", contentType)
-		return fullLink
+		return fullLink, err
 	}
-	return ""
+	return "", fmt.Errorf("Расширение " + extension + " не входит в область поиска")
 
 }

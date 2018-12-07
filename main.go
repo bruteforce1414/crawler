@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 )
-
+// todo
 func failOnError(err error, msg string) {
 	if err != nil {
 		fmt.Println("%s: %s", msg, err)

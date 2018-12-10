@@ -16,6 +16,12 @@ func (s *public) Close() {
 
 type public struct {
 	connAMQP *amqp.Connection // тут ставишь нужный тип
+	msg      amqp.Queue
+	channel  channelPublic
+}
+
+type channelPublic struct {
+	channel *amqp.Channel
 }
 
 func NewPublic(queueName string) (Public, error) {
@@ -25,7 +31,7 @@ func NewPublic(queueName string) (Public, error) {
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 
-	_, err = ch.QueueDeclare(
+	q, err := ch.QueueDeclare(
 		queueName, // name
 		true,      // durable
 		false,     // delete when unused
@@ -34,13 +40,30 @@ func NewPublic(queueName string) (Public, error) {
 		nil,       // arguments
 	)
 	failOnError(err, "Failed to declare an exchange")
-	publicObject := public{conn}
+	publicObject := public{
+		connAMQP: conn,
+		msg:      q,
+		channel:  channelPublic{channel: ch},
+	}
 	return &publicObject, err
 }
 
 func (c *public) Messages(linksPublishing []string) {
-	//fmt.Println(linksPublishing)
+	for _, value := range linksPublishing {
 
+		err := c.channel.channel.Publish(
+			"",         // exchange
+			c.msg.Name, // routing key
+			false,      // mandatory
+			false,
+			amqp.Publishing{
+				DeliveryMode: amqp.Persistent,
+				ContentType:  "text/plain",
+				Body:         []byte(string(value)),
+			})
+		failOnError(err, "Failed to publish a message")
+		log.Printf(" [x] Sent %s", string(value))
+	}
 }
 
 func failOnError(err error, msg string) {

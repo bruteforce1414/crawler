@@ -65,7 +65,7 @@ func worker(url string, public queue.Public) {
 		}
 		if err != nil {
 		}
-		public.Messages(linksPublishing)
-	}
 
+	}
+	public.Messages(linksPublishing)
 }

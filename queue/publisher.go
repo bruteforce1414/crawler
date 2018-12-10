@@ -1,12 +1,20 @@
 package queue
 
 import (
+	"fmt"
 	"github.com/streadway/amqp"
 	"log"
 )
 
-func Publicher() {
+type Consumer interface {
+	Messages(linksPublishing []string)
+}
 
+type consumer struct {
+	connection *amqp.Connection // тут ставишь нужный тип
+}
+
+func NewConsumer() (Consumer, error) {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -14,8 +22,7 @@ func Publicher() {
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
+	_, err = ch.QueueDeclare(
 		"task_queue", // name
 		true,         // durable
 		false,        // delete when unused
@@ -23,19 +30,18 @@ func Publicher() {
 		false,        // no-wait
 		nil,          // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+	failOnError(err, "Failed to declare an exchange")
+	consumerObject := consumer{conn}
+	return &consumerObject, err
+}
 
-	body := "http://shkola114.ru/index.php?option=com_content&view=article&id=431&Itemid=195"
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,
-		amqp.Publishing{
-			DeliveryMode: amqp.Persistent,
-			ContentType:  "text/plain",
-			Body:         []byte(body),
-		})
-	failOnError(err, "Failed to publish a message")
-	log.Printf(" [x] Sent %s", body)
+func (c *consumer) Messages(linksPublishing []string) {
+	fmt.Println(linksPublishing)
+
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
 }

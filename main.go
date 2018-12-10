@@ -20,31 +20,28 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	forever := make(chan bool)
 
-	msgs, err := queue.Subscriber()
+	msgs, err := queue.NewSubscribe("subscriber_queue")
 
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
-	publisher, err := queue.NewPublisher()
+	public, err := queue.NewPublic("publisher_queue")
 
-	go func(с queue.Publisher, ch <-chan amqp.Delivery) {
-		//	fmt.Println("Полученные сообщения", msgs)
-		for d := range msgs {
-			//			log.Printf("Received a message: %s", d.Body)
+	go func(с queue.Public, ch <-chan amqp.Delivery) {
+		for d := range msgs.Messages() {
+			log.Printf("Received a message: %s", d.Body)
 			go worker(string(d.Body), с)
 			d.Ack(false)
 		}
-	}(publisher, msgs)
+	}(public, msgs.Messages())
 	time.Sleep(30 * time.Second)
-	defer close()
-	//<-forever
+	msgs.Close()
 }
 
-func worker(url string, publisher queue.Publisher) {
+func worker(url string, public queue.Public) {
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -60,18 +57,15 @@ func worker(url string, publisher queue.Publisher) {
 		log.Fatal(err)
 	}
 	fmt.Println("LinksAll length:", len(linksAll))
-	for _, link := range linksAll {
-		//	fmt.Println("Cсылка №", i+1, ": ", link)
+	for i, link := range linksAll {
+		fmt.Println("Cсылка №", i+1, ": ", link)
 		link, err = urlprocessing.ParseUrl(string(url), link)
 		if link != "" {
-			// здесь будет добавление в очередь
-			//	fmt.Println("Полный путь по ссылке №", i+1, ": ", link)
 			linksPublishing = append(linksPublishing, link)
 		}
 		if err != nil {
-			//		fmt.Println("Ошибка для ссылки №", i+1, ": ", err)
 		}
-		publisher.Messages(linksPublishing)
+		public.Messages(linksPublishing)
 	}
 
 }

@@ -5,15 +5,20 @@ import (
 	"log"
 )
 
-type Publisher interface {
+type Public interface {
 	Messages(linksPublishing []string)
+	Close()
 }
 
-type publisher struct {
-	connection *amqp.Connection // тут ставишь нужный тип
+func (s *public) Close() {
+	s.connAMQP.Close()
 }
 
-func NewPublisher() (Publisher, error) {
+type public struct {
+	connAMQP *amqp.Connection // тут ставишь нужный тип
+}
+
+func NewPublic(queueName string) (Public, error) {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
 
@@ -21,19 +26,19 @@ func NewPublisher() (Publisher, error) {
 	failOnError(err, "Failed to open a channel")
 
 	_, err = ch.QueueDeclare(
-		"publisher_queue", // name
-		true,              // durable
-		false,             // delete when unused
-		false,             // exclusive
-		false,             // no-wait
-		nil,               // arguments
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
+		nil,       // arguments
 	)
 	failOnError(err, "Failed to declare an exchange")
-	publisherObject := publisher{conn}
-	return &publisherObject, err
+	publicObject := public{conn}
+	return &publicObject, err
 }
 
-func (c *publisher) Messages(linksPublishing []string) {
+func (c *public) Messages(linksPublishing []string) {
 	//fmt.Println(linksPublishing)
 
 }

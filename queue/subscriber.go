@@ -1,26 +1,26 @@
 package queue
 
 import (
+	"fmt"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 func Subscriber() (<-chan amqp.Delivery, error) {
 
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
 
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
 
 	q, err := ch.QueueDeclare(
-		"task_queue", // name
-		true,         // durable
-		false,        // delete when unused
-		false,        // exclusive
-		false,        // no-wait
-		nil,          // arguments
+		"subscriber_queue", // name
+		true,               // durable
+		false,              // delete when unused
+		false,              // exclusive
+		false,              // no-wait
+		nil,                // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
@@ -41,6 +41,10 @@ func Subscriber() (<-chan amqp.Delivery, error) {
 		nil,    // args
 	)
 	failOnError(err, "Failed to register a consumer")
+
+	fmt.Println("Полученные сообщения", msgs)
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
 
 	return msgs, err
 }

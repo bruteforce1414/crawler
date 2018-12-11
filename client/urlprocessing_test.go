@@ -146,3 +146,13 @@ func TestHttpClient_Get3(t *testing.T) {
 	time.Sleep(100000)
 
 }
+
+func TestHttpClient_Get4(t *testing.T) {
+	a := assert.New(t)
+
+	link, _ := urlprocessing.ParseUrl("https://www.deviantart.com/", "michaelmaddox222/?offset=10#comments")
+
+	a.Equal("https://www.deviantart.com/michaelmaddox222/?offset=10", link)
+	// нужно проверить спарсенные ссылки!!!
+
+}

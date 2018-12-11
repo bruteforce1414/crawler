@@ -5,7 +5,6 @@ import (
 	"github.com/bruteforce1414/crawler/client"
 	"github.com/bruteforce1414/crawler/queue"
 	"github.com/streadway/amqp"
-	"github.com/willf/bloom"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +12,9 @@ import (
 	"time"
 )
 
-var filter = bloom.New(1000000, 5)
+var (
+	counter int
+)
 
 func failOnError(err error, msg string) {
 	if err != nil {
@@ -36,21 +37,19 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	go func(с queue.Public, ch <-chan amqp.Delivery) {
+	go func(c queue.Public, ch <-chan amqp.Delivery) {
 		for d := range msgs.Messages() {
-			if !filter.Test([]byte(string(d.Body))) {
-				filter.Add([]byte(string(d.Body)))
-				go worker(string(d.Body), с)
-				log.Printf("Received a message: %s", d.Body)
+			counter = counter + 1
+			go worker(string(d.Body), c)
+			log.Printf("Received a message: %s", d.Body)
 
-			}
 			d.Ack(false)
 		}
 	}(public, msgs.Messages())
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(60 * time.Second)
 	msgs.Close()
+	fmt.Println("Общее количество обработанных ссылок ", counter)
 }
 
 func worker(url string, public queue.Public) {
@@ -58,7 +57,7 @@ func worker(url string, public queue.Public) {
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("адрес не доступен")
-
+		return
 	}
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	bodyString := string(bodyBytes)
@@ -67,19 +66,17 @@ func worker(url string, public queue.Public) {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 	fmt.Println("LinksAll length:", len(linksAll))
 	for i, link := range linksAll {
-		fmt.Println("Cсылка №", i+1, ": ", link)
+
 		link, err = urlprocessing.ParseUrl(string(url), link)
+		fmt.Println("Cсылка №", i+1, ": ", link)
 		if link != "" {
-			if !filter.Test([]byte(string(link))) {
-				filter.Add([]byte(string(link)))
-				public.Messages(link)
-			}
+			public.Messages(link)
 		}
-		if err != nil {
-		}
+
 	}
 
 }

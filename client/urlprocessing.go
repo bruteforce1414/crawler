@@ -39,8 +39,13 @@ func ParseUrl(urlPage string, ctxUrl string) (string, error) {
 	fullLink := (base.ResolveReference(u)).String()
 
 	// Checking for http in first fourth characters in url
-	if strings.Contains(fullLink[0:4], "http") != true {
+	if strings.Contains(fullLink[:4], "http") != true {
 		return "", fmt.Errorf("Ссылка не поддерживает протокол http или https")
+	}
+
+	if strings.Contains(fullLink, "#") {
+		index := strings.Index(fullLink, "#")
+		fullLink = fullLink[:index]
 	}
 
 	extension := filepath.Ext(fullLink)

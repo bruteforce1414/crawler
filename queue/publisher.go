@@ -6,7 +6,7 @@ import (
 )
 
 type Public interface {
-	Messages(linksPublishing []string)
+	Messages(linkPublishing string)
 	Close()
 }
 
@@ -48,22 +48,21 @@ func NewPublic(queueName string) (Public, error) {
 	return &publicObject, err
 }
 
-func (c *public) Messages(linksPublishing []string) {
-	for _, value := range linksPublishing {
+func (c *public) Messages(linkPublishing string) {
 
-		err := c.channel.channel.Publish(
-			"",         // exchange
-			c.msg.Name, // routing key
-			false,      // mandatory
-			false,
-			amqp.Publishing{
-				DeliveryMode: amqp.Persistent,
-				ContentType:  "text/plain",
-				Body:         []byte(string(value)),
-			})
-		failOnError(err, "Failed to publish a message")
-		log.Printf(" [x] Sent %s", string(value))
-	}
+	err := c.channel.channel.Publish(
+		"",         // exchange
+		c.msg.Name, // routing key
+		false,      // mandatory
+		false,
+		amqp.Publishing{
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "text/plain",
+			Body:         []byte(string(linkPublishing)),
+		})
+	failOnError(err, "Failed to publish a message")
+	log.Printf(" [x] Sent %s", string(linkPublishing))
+
 }
 
 func failOnError(err error, msg string) {
